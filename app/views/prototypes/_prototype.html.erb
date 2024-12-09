@@ -1,0 +1,16 @@
+<div class="card">
+  <%= link_to prototype_path(prototype) do %>
+    <%= image_tag prototype.image, class: "card__img" %>
+  <% end %>
+
+  <div class="card__body">
+    <%= link_to prototype.title, prototype_path(prototype), class: "card__title" %>
+    <p class="card__summary">
+      <%= prototype.catch_copy %>
+    </p>
+    <p class="card__user-link">
+      <%= link_to "by #{prototype.user.name}", user_path(prototype.user) %>
+    </p>
+  </div>
+</div>
+
