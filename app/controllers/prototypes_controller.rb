@@ -1,9 +1,10 @@
 class PrototypesController < ApplicationController
   ActiveRecord::RecordNotFound in PrototypesController#show
   before_action :set_prototype, only: [:show, :edit, :update, :destroy]
+  before_action :authenticate_user!, only: [:new, :edit, :create, :update, :destroy]
   before_action :move_to_index, except: [:index, :show]
-  before_action :authenticate_user!, except: [:index, :show]
-  before_action :correct_user, only: [:edit, :update, :destroy]
+  before_action :correct_user, only: [:edit, :update] 
+
 
   def index
     @prototypes = Prototype.includes(:user).all
@@ -22,8 +23,9 @@ class PrototypesController < ApplicationController
   def create
     @prototype = Prototype.new(prototype_params)
     if @prototype.save
-      redirect_to @prototype
+      redirect_to root_path
     else
+      render :new
       flash[:prototype_data] = prototype_params.except(:image)
       flash[:errors] = @prototype.errors.full_messages
       redirect_to new_prototype_path
@@ -38,7 +40,7 @@ class PrototypesController < ApplicationController
   def update
     @prototype = Prototype.find(params[:id])
     if @prototype.update(prototype_params)
-      redirect_to @prototype
+      redirect_to root_path
     else
       flash[:prototype_data] = prototype_params.except(:image)
       flash[:errors] = @prototype.errors.full_messages
@@ -52,12 +54,7 @@ class PrototypesController < ApplicationController
       redirect_to root_path
     else
       redirect_to @prototype
-    end
-  end
-
-  def move_to_index
-    unless user_signed_in?
-      redirect_to action: :index
+      render :edit
     end
   end
 
@@ -76,12 +73,6 @@ class PrototypesController < ApplicationController
     
   def prototype_params
     params.require(:prototype).permit(:title, :catch_copy, :concept, :image).merge(user_id: current_user.id)
-  end
-
-  def user_authorized
-    unless @prototype.user == current_user
-      redirect_to root_path, alert: "アクセス権がありません。"
-    end
   end
 
   def move_to_index
