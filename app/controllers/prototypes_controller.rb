@@ -2,7 +2,8 @@ class PrototypesController < ApplicationController
   ActiveRecord::RecordNotFound in PrototypesController#show
   before_action :set_prototype, only: [:show, :edit, :update, :destroy]
   before_action :move_to_index, except: [:index, :show]
-  before_action :authenticate_user!, only: [:new, :create, :edit, :update, :destroy]
+  before_action :authenticate_user!, except: [:index, :show]
+  before_action :correct_user, only: [:edit, :update, :destroy]
 
   def index
     @prototypes = Prototype.includes(:user).all
@@ -15,17 +16,17 @@ class PrototypesController < ApplicationController
   end
 
   def new
-    @prototype = Prototype.new
+    @prototype = Prototype.new#ok
   end
 
   def create
-    @prototype = current_user.prototypes.new(prototype_params)
-
+    @prototype = Prototype.new(prototype_params)
     if @prototype.save
-     
-      redirect_to root_path
+      redirect_to @prototype
     else
-      render :new
+      flash[:prototype_data] = prototype_params.except(:image)
+      flash[:errors] = @prototype.errors.full_messages
+      redirect_to new_prototype_path
     end
   end
 
@@ -37,9 +38,11 @@ class PrototypesController < ApplicationController
   def update
     @prototype = Prototype.find(params[:id])
     if @prototype.update(prototype_params)
-      redirect_to prototype_path(@prototype)
+      redirect_to @prototype
     else
-      render :edit
+      flash[:prototype_data] = prototype_params.except(:image)
+      flash[:errors] = @prototype.errors.full_messages
+      redirect_to edit_prototype_path(@prototype)
     end
   end
 
@@ -59,6 +62,13 @@ class PrototypesController < ApplicationController
   end
 
   private
+
+  def correct_user
+    @prototype = Prototype.find(params[:id])
+    unless @prototype.user == current_user
+      redirect_to root_path
+    end
+  end
 
   def set_prototype
     @prototype = Prototype.find(params[:id])
